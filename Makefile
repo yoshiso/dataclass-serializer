@@ -4,3 +4,10 @@ test:
 lint:
 	black --check
 	mypy -p dataclass_serializer
+
+clean:
+	rm -rf dist/
+
+release:
+	python setup.py bdist_wheel
+	twine upload dist/*
