@@ -14,5 +14,5 @@ setup(
     keywords="",
     packages=find_packages(exclude=("tests")),
     install_requires=[],
-    tests_require=["pytest", "pytest-cov", "pytz", "black"],
+    tests_require=["pytest", "pytest-cov", "pytz", "black", "numpy"],
 )
