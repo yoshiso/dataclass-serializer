@@ -16,7 +16,18 @@ class Serializable:
     def __post_init__(self):
         self._validate_contracts()
 
+    def to_dict(self) -> dict:
+        """Transform serializable object to dict.
+        """
+        fields = dataclasses.fields(self)
+        o = {}
+        for field in fields:
+            o[field.name] = getattr(self, field.name)
+        return o
+
     def serialize(self) -> dict:
+        """Serialize object to be json serializable representation.
+        """
         if not dataclasses.is_dataclass(self):
             raise TypeError("need to be decorated as dataclass")
 

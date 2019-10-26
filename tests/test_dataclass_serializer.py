@@ -290,3 +290,13 @@ def test_with_contract():
         ItemWithContract(value=-1)
 
     ItemWithContract(value=3)
+
+
+def test_to_dict():
+
+    item = Item(value=1)
+    assert item.to_dict() == {"value": 1}
+
+    # must be shallow transformation
+    item = Item(value=Item(value=1))
+    assert item.to_dict() == {"value": Item(value=1)}
