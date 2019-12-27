@@ -37,7 +37,7 @@ class Serializable:
 
         for field in fields:
 
-            value = _serialize(getattr(self, field.name))
+            value = getattr(self, field.name)
 
             if value is None:
                 # Allow to be optional only when Optional type is declared.
@@ -59,6 +59,8 @@ class Serializable:
                             )
                         )
                     value = encode(value)
+
+            value = _serialize(value)
 
             o[field.name] = value
 

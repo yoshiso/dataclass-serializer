@@ -60,6 +60,13 @@ class ItemWithContract(Serializable):
     value: Optional[Any] = dataclasses.field(metadata={"contract": lambda x: x > 0})
 
 
+@dataclasses.dataclass
+class ItemWithCustomSerialize(Serializable):
+    value: Optional[Any] = dataclasses.field(
+        metadata={"encode": lambda x: x + "---", "decode": lambda x: x[:-3]}
+    )
+
+
 def test_serializable_class_behavior():
     with pytest.raises(TypeError):
         Item()
@@ -300,3 +307,20 @@ def test_to_dict():
     # must be shallow transformation
     item = Item(value=Item(value=1))
     assert item.to_dict() == {"value": Item(value=1)}
+
+
+def test_with_custom_encoder():
+    # Custom serializagtion logic should be priotized than the default.
+
+    item = ItemWithCustomSerialize(value="value")
+
+    expect = {
+        "value": "value---",
+        "__ser__": "test_dataclass_serializer:ItemWithCustomSerialize",
+    }
+    item.validate()
+
+    assert item.serialize() == expect
+
+    assert deserialize(expect) == ItemWithCustomSerialize(value="value")
+
