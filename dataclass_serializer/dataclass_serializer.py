@@ -1,4 +1,7 @@
-from typing import Any, Dict, _GenericAlias  # type: ignore
+from dataclasses import dataclass
+from typing import Any, Dict, Callable, Tuple, _GenericAlias  # type: ignore
+import types
+
 from collections import OrderedDict
 from decimal import Decimal
 from datetime import date, datetime
@@ -134,6 +137,21 @@ class Serializable:
         return cls(**o)  # type: ignore
 
 
+@dataclass(frozen=True)
+class Partial(Serializable):
+    func: Callable
+    args: Tuple[Any, ...]
+    kwargs: Dict[str, Any]
+
+    def __call__(self, *args, **kwargs):
+        return self.func(*args, **kwargs)
+
+
+def partial(func: Callable, *args, **kwargs) -> Partial:
+    """Create partial function / class"""
+    return Partial(func=func, args=args, kwargs=kwargs)
+
+
 def _serialize(x):
     if isinstance(x, OrderedDict):
         return {META_FIELD: "OrderedDict", "value": [list(xi) for xi in x.items()]}
@@ -147,6 +165,10 @@ def _serialize(x):
         return {META_FIELD: "set", "value": list(x)}
     if isinstance(x, Serializable):
         return x.serialize()
+    if isinstance(x, type):
+        return {META_FIELD: "type", "value": f"{x.__module__}:{x.__name__}"}
+    if isinstance(x, types.FunctionType):
+        return {META_FIELD: "function", "value": f"{x.__module__}:{x.__name__}"}
     if isinstance(x, datetime):
         return {META_FIELD: "datetime", "value": x.isoformat()}
     if isinstance(x, date):
@@ -171,6 +193,9 @@ def _deserialize(x):
                 return datetime.strptime(x["value"], "%Y%m%d").date()
             elif x[META_FIELD] == "Decimal":
                 return Decimal(x["value"])
+            elif x[META_FIELD] in ("type", "function"):
+                m, c = x["value"].split(":")
+                return getattr(import_module(m), c)
             m, c = x[META_FIELD].split(":")
             cls = getattr(import_module(m), c)
             return cls.deserialize(x)

@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="dataclass_serializer",
-    version="1.0.2",
+    version="1.1.0",
     description="Dataclass serializer supports nested instances.",
     license="MIT",
     author="Sho Yoshida",
