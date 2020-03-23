@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Callable
 import pytest
 import pytz
 from collections import OrderedDict
@@ -7,7 +7,7 @@ from decimal import Decimal
 import numpy as np
 import dataclasses
 
-from dataclass_serializer import Serializable, deserialize
+from dataclass_serializer import Serializable, deserialize, partial
 
 
 @dataclasses.dataclass
@@ -65,6 +65,16 @@ class ItemWithCustomSerialize(Serializable):
     value: Optional[Any] = dataclasses.field(
         metadata={"encode": lambda x: x + "---", "decode": lambda x: x[:-3]}
     )
+
+
+@dataclasses.dataclass
+class ItemWithType(Serializable):
+    value: type = dataclasses.field()
+
+
+@dataclasses.dataclass
+class ItemWithCallable(Serializable):
+    value: Callable = dataclasses.field()
 
 
 def test_serializable_class_behavior():
@@ -324,3 +334,69 @@ def test_with_custom_encoder():
 
     assert deserialize(expect) == ItemWithCustomSerialize(value="value")
 
+
+def test_with_type():
+
+    item = ItemWithType(value=Decimal)
+
+    expect = {
+        "value": {"__ser__": "type", "value": "decimal:Decimal"},
+        "__ser__": "test_dataclass_serializer:ItemWithType",
+    }
+    assert item.serialize() == expect
+
+    item.validate()
+
+
+def test_with_callable():
+
+    item = ItemWithType(value=np.testing.assert_array_almost_equal)
+
+    expect = {
+        "value": {
+            "__ser__": "function",
+            "value": "numpy.testing._private.utils:assert_array_almost_equal",
+        },
+        "__ser__": "test_dataclass_serializer:ItemWithType",
+    }
+    assert item.serialize() == expect
+
+    item.validate()
+
+
+@dataclasses.dataclass
+class ItemWithFields(Serializable):
+    value1: Any
+    value2: Any
+
+
+def test_partial():
+    # Custom serializagtion logic should be priotized than the default.
+
+    item = partial(ItemWithFields)
+
+    expect = {
+        "func": {
+            "__ser__": "type",
+            "value": "test_dataclass_serializer:ItemWithFields",
+        },
+        "args": {"__ser__": "tuple", "value": []},
+        "kwargs": {},
+        "__ser__": "dataclass_serializer.dataclass_serializer:Partial",
+    }
+    assert item.serialize() == expect
+
+    assert item(value1="1", value2="2") == ItemWithFields(value1="1", value2="2")
+
+    item.validate()
+
+    item = partial(ItemWithFields, value1="value1")
+
+    # Could not initialized without sufficient parameters
+    with pytest.raises(TypeError):
+        item()
+
+    # Returns result once satisfys condition, also confirmed support of parameter overwrite
+    assert item(value1="update", value2="value2") == ItemWithFields(
+        value1="update", value2="value2"
+    )
