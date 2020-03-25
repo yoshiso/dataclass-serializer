@@ -364,6 +364,21 @@ def test_with_callable():
     item.validate()
 
 
+def test_with_module():
+
+    item = Item(value=pytest)
+
+    expect = {
+        "value": {"__ser__": "module", "value": "pytest"},
+        "__ser__": "test_dataclass_serializer:Item",
+    }
+    assert item.serialize() == expect
+
+    item.validate()
+
+    assert deserialize(item.serialize()).value == pytest
+
+
 @dataclasses.dataclass
 class ItemWithFields(Serializable):
     value1: Any

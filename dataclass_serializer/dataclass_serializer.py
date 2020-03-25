@@ -169,6 +169,8 @@ def _serialize(x):
         return {META_FIELD: "type", "value": f"{x.__module__}:{x.__name__}"}
     if isinstance(x, types.FunctionType):
         return {META_FIELD: "function", "value": f"{x.__module__}:{x.__name__}"}
+    if isinstance(x, types.ModuleType):
+        return {META_FIELD: "module", "value": f"{x.__name__}"}
     if isinstance(x, datetime):
         return {META_FIELD: "datetime", "value": x.isoformat()}
     if isinstance(x, date):
@@ -196,6 +198,8 @@ def _deserialize(x):
             elif x[META_FIELD] in ("type", "function"):
                 m, c = x["value"].split(":")
                 return getattr(import_module(m), c)
+            elif x[META_FIELD] == "module":
+                return import_module(x["value"])
             m, c = x[META_FIELD].split(":")
             cls = getattr(import_module(m), c)
             return cls.deserialize(x)
