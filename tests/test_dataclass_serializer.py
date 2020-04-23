@@ -395,7 +395,6 @@ def test_partial():
             "__ser__": "type",
             "value": "test_dataclass_serializer:ItemWithFields",
         },
-        "args": {"__ser__": "tuple", "value": []},
         "kwargs": {},
         "__ser__": "dataclass_serializer.dataclass_serializer:Partial",
     }
@@ -411,7 +410,14 @@ def test_partial():
     with pytest.raises(TypeError):
         item()
 
-    # Returns result once satisfys condition, also confirmed support of parameter overwrite
-    assert item(value1="update", value2="value2") == ItemWithFields(
-        value1="update", value2="value2"
-    )
+    with pytest.raises(TypeError):
+        # Returns result once satisfys condition, also confirmed support of parameter overwrite
+        assert item(value1="update", value2="value2") == ItemWithFields(
+            value1="update", value2="value2"
+        )
+
+    with pytest.raises(TypeError):
+        # Returns result once satisfys condition, also confirmed support of parameter overwrite
+        assert item(vvalue2="value2") == ItemWithFields(
+            value1="update", value2="value2"
+        )

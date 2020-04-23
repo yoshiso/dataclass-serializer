@@ -140,16 +140,15 @@ class Serializable:
 @dataclass(frozen=True)
 class Partial(Serializable):
     func: Callable
-    args: Tuple[Any, ...]
     kwargs: Dict[str, Any]
 
     def __call__(self, *args, **kwargs):
-        return self.func(*args, **kwargs)
+        return self.func(*args, **self.kwargs, **kwargs)
 
 
-def partial(func: Callable, *args, **kwargs) -> Partial:
+def partial(func: Callable, **kwargs) -> Partial:
     """Create partial function / class"""
-    return Partial(func=func, args=args, kwargs=kwargs)
+    return Partial(func=func, kwargs=kwargs)
 
 
 def _serialize(x):
