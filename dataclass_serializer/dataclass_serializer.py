@@ -83,12 +83,8 @@ class Serializable:
             value = getattr(self, field.name)
 
             if value is None:
-                # Allow to be optional only when Optional type is declared.
-                if not isinstance(field.type, _GenericAlias):
-                    raise TypeError(f"{field.name} is not optional")
-
-                if not type(None) in getattr(field.type, "__args__"):
-                    raise TypeError(f"{field.name} is not optional")
+                if not _is_optional_field(field):
+                    raise TypeError(f'{field.name} is not optional')
 
             contract = field.metadata.get("contract", None)
 
@@ -114,6 +110,14 @@ class Serializable:
         o: Dict[str, Any] = {}
 
         for field in dataclasses.fields(cls):
+
+            # Case when serialized data is former implementation and does not have
+            # new field in the entity. For this case we'll let it have None instead of
+            # default value to reproducibility of entity.
+            if field.name not in data:
+                if _is_optional_field(field):
+                    o[field.name] = None
+                    continue
 
             value = data.get(field.name, _default_value(field))
 
@@ -149,6 +153,10 @@ class Partial(Serializable):
 def partial(func: Callable, **kwargs) -> Partial:
     """Create partial function / class"""
     return Partial(func=func, kwargs=kwargs)
+
+
+def _is_optional_field(field) -> bool:
+    return isinstance(field.type, _GenericAlias) and type(None) in getattr(field.type, "__args__")
 
 
 def _serialize(x):
