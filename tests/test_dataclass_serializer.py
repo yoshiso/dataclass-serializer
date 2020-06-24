@@ -17,7 +17,7 @@ class Item(Serializable):
 
 @dataclasses.dataclass
 class ItemWithDefault(Serializable):
-    value: int = dataclasses.field(default=1)
+    value: Optional[int] = dataclasses.field(default=1)
 
 
 @dataclasses.dataclass
@@ -96,10 +96,20 @@ def test_serializable_with_default():
 
     assert deserialize(expect) == ItemWithDefault(value=1)
 
-    # if serialized data missing field, but there is default value then allow to
-    # deserialize with default value.
+    # Case when entity is already serialized before, then later on you added new field to the
+    # entity with new default value. In this case, we want to deserialize entity with filling
+    # new field with None.
+
     missing = {"__ser__": "test_dataclass_serializer:ItemWithDefault"}
-    assert deserialize(missing) == ItemWithDefault(value=1)
+    assert deserialize(missing) == ItemWithDefault(value=None)
+
+    # Test case with not optional value
+    with pytest.raises(ValueError) as e:
+        missing = {"__ser__": "test_dataclass_serializer:Item"}
+        deserialize(missing)
+
+    assert 'unknown' in str(e.value)
+
 
 
 def test_serializable_with_default_factory():
