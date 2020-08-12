@@ -3,7 +3,7 @@ test:
 
 lint:
 	black --check
-	mypy -p dataclass_serializer
+	mypy --ignore-missing-imports dataclass_serializer/ tests/
 
 clean:
 	rm -rf dist/

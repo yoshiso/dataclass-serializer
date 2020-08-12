@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, Callable, Tuple, _GenericAlias  # type: ignore
+from typing import Any, Dict, Callable, Tuple, Generic, TypeVar, Union, _GenericAlias  # type: ignore
 import types
 
 from collections import OrderedDict
@@ -9,15 +9,30 @@ from importlib import import_module
 import json
 import dataclasses
 
-__all__ = ["Serializable", "deserialize"]
+__all__ = ["Serializable", "deserialize", "partial", "NoDefault", "NoDefaultVar"]
 
 
 META_FIELD = "__ser__"
 
+T = TypeVar("T")
+
+
+class NoDefault(Generic[T]):
+    pass
+
+
+NoDefaultVar = Union[NoDefault[T], T]
+
 
 class Serializable:
+
     def __post_init__(self):
         self._validate_contracts()
+
+        for key, value in self.__dict__.items():
+
+            if value is NoDefault:
+                raise TypeError(f"__init__ missing 1 required argument: '{key}'")
 
     def to_dict(self) -> dict:
         """Transform serializable object to dict.
