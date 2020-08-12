@@ -12,7 +12,7 @@ from dataclass_serializer import (
     deserialize,
     partial,
     NoDefaultVar,
-    NoDefault,
+    no_default,
 )
 
 
@@ -440,7 +440,7 @@ def test_partial():
 
 @dataclasses.dataclass
 class ItemWithNoDefault(Serializable):
-    value: NoDefaultVar[int] = NoDefault()
+    value: NoDefaultVar[int] = no_default
 
 
 def test_no_default():

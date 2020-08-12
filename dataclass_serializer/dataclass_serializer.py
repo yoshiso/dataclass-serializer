@@ -17,11 +17,13 @@ META_FIELD = "__ser__"
 T = TypeVar("T")
 
 
-class NoDefault(Generic[T]):
+class _NoDefault(Generic[T]):
     pass
 
 
-NoDefaultVar = Union[NoDefault[T], T]
+NoDefaultVar = Union[_NoDefault[T], T]
+
+no_default: NoDefaultVar = _NoDefault()
 
 
 class Serializable:
@@ -31,7 +33,7 @@ class Serializable:
 
         for key, value in self.__dict__.items():
 
-            if value is NoDefault:
+            if value is no_default:
                 raise TypeError(f"__init__ missing 1 required argument: '{key}'")
 
     def to_dict(self) -> dict:
