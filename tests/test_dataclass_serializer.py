@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any, Callable
+from typing import Optional, List, Dict, Any, Callable, Union
 import pytest
 import pytz
 from collections import OrderedDict
@@ -7,7 +7,13 @@ from decimal import Decimal
 import numpy as np
 import dataclasses
 
-from dataclass_serializer import Serializable, deserialize, partial
+from dataclass_serializer import (
+    Serializable,
+    deserialize,
+    partial,
+    NoDefaultVar,
+    no_default,
+)
 
 
 @dataclasses.dataclass
@@ -108,8 +114,7 @@ def test_serializable_with_default():
         missing = {"__ser__": "test_dataclass_serializer:Item"}
         deserialize(missing)
 
-    assert 'unknown' in str(e.value)
-
+    assert "unknown" in str(e.value)
 
 
 def test_serializable_with_default_factory():
@@ -431,3 +436,17 @@ def test_partial():
         assert item(vvalue2="value2") == ItemWithFields(
             value1="update", value2="value2"
         )
+
+
+@dataclasses.dataclass
+class ItemWithNoDefault(Serializable):
+    value: NoDefaultVar[int] = no_default
+
+
+def test_no_default():
+
+    with pytest.raises(TypeError):
+        ItemWithNoDefault()
+
+    # Can be initialized with
+    ItemWithNoDefault(value=1)
